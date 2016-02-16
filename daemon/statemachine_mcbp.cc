@@ -434,6 +434,9 @@ bool conn_pending_close(McbpConnection *c) {
      */
     perform_callbacks(ON_DISCONNECT, NULL, c);
 
+
+    LOG_WARNING(c, "conn_pending_close c->getRefcount() == %u",
+        c->getRefcount());
     if (c->getRefcount() > 1) {
         return false;
     }
