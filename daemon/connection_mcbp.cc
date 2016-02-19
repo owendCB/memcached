@@ -1194,10 +1194,11 @@ void McbpConnection::maybeLogSlowCommand(
         hrtime_t timings((hrtime_t)elapsed.count());
         timings *= 1000 * 1000; // convert from ms to ns
 
-        LOG_WARNING(NULL, "%u: Slow %s operation on connection: %s (%s)",
+        LOG_WARNING(NULL, "%u: Slow %s operation on connection: %s (%s) key= %s",
                     getId(), opcode,
                     Couchbase::hrtime2text(timings).c_str(),
-                    getDescription().c_str());
+                    getDescription().c_str(),
+                    (read.curr - binary_header.request.keylen));
     }
 }
 
