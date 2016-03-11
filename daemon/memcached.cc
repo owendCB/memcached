@@ -159,6 +159,9 @@ static void set_stats_reset_time(void)
 void disassociate_bucket(Connection *c) {
     Bucket &b = all_buckets.at(c->getBucketIndex());
     cb_mutex_enter(&b.mutex);
+    settings.extensions.logger->log(EXTENSION_LOG_WARNING, c,
+                                    "disassociate_bucket conn = %p number of client (before dec) = %d",
+                                    (void*)c, b.clients);
     b.clients--;
 
     c->setBucketIndex(0);
@@ -173,6 +176,8 @@ void disassociate_bucket(Connection *c) {
 
 bool associate_bucket(Connection *c, const char *name) {
     bool found = false;
+    settings.extensions.logger->log(EXTENSION_LOG_WARNING, c,
+                                    "associate_bucket conn = %p name= %s",(void*)c, name);
 
     /* leave the current bucket */
     disassociate_bucket(c);
@@ -183,6 +188,8 @@ bool associate_bucket(Connection *c, const char *name) {
         Bucket &b = all_buckets.at(ii);
         cb_mutex_enter(&b.mutex);
         if (b.state == BucketState::Ready && strcmp(b.name, name) == 0) {
+            settings.extensions.logger->log(EXTENSION_LOG_WARNING, c,
+                                            "For loop: associate_bucket conn = %p number of clients (before inc) = %d",(void*)c, b.clients);
             b.clients++;
             c->setBucketIndex(ii);
             c->setBucketEngine(b.engine);
@@ -195,6 +202,8 @@ bool associate_bucket(Connection *c, const char *name) {
         /* Bucket not found, connect to the "no-bucket" */
         Bucket &b = all_buckets.at(0);
         cb_mutex_enter(&b.mutex);
+        settings.extensions.logger->log(EXTENSION_LOG_WARNING, c,
+                                        "Not found: associate_bucket conn = %p number of clients (before inc) = %d",(void*)c, b.clients);
         b.clients++;
         cb_mutex_exit(&b.mutex);
         c->setBucketIndex(0);
@@ -207,6 +216,8 @@ bool associate_bucket(Connection *c, const char *name) {
 void associate_initial_bucket(Connection *c) {
     Bucket &b = all_buckets.at(0);
     cb_mutex_enter(&b.mutex);
+    settings.extensions.logger->log(EXTENSION_LOG_WARNING, c,
+                                    "associate_initial_bucket conn = %p number of clients (before inc) = %d",(void*)c, b.clients);
     b.clients++;
     cb_mutex_exit(&b.mutex);
 
@@ -1927,6 +1938,7 @@ void notify_thread_bucket_deletion(LIBEVENT_THREAD *me) {
 void DestroyBucketThread::destroy() {
     ENGINE_ERROR_CODE ret = ENGINE_KEY_ENOENT;
     cb_mutex_enter(&buckets_lock);
+    LOG_WARNING(connection, "DestroyBucketThread: destroy");
 
     /*
      * The destroy function will have access to a connection if the
@@ -1963,6 +1975,7 @@ void DestroyBucketThread::destroy() {
                    connection_id, name.c_str(),
                    memcached_status_2_text(code));
         result = ret;
+        LOG_WARNING(connection, "DestroyBucketThread: destroy returning early");
         return;
     }
 
@@ -1973,7 +1986,13 @@ void DestroyBucketThread::destroy() {
 
     /* If this thread is connected to the requested bucket... release it */
     if (connection != nullptr && idx == connection->getBucketIndex()) {
+        LOG_WARNING(connection, "calling DestroyBucketThread: disassociate_bucket", (void*)connection);
         disassociate_bucket(connection);
+    }
+    else
+    {
+        LOG_WARNING(connection, "DestroyBucketThread: not called disassociate bucket conn = %p", (void*)connection);
+ 
     }
 
     /* Let all of the worker threads start invalidating connections */
@@ -1982,7 +2001,7 @@ void DestroyBucketThread::destroy() {
     /* Wait until all users disconnected... */
     cb_mutex_enter(&all_buckets[idx].mutex);
     while (all_buckets[idx].clients > 0) {
-        LOG_NOTICE(connection,
+        LOG_WARNING(connection,
                    "%u Delete bucket [%s]. Still waiting: %u clients connected",
                    connection_id, name.c_str(), all_buckets[idx].clients);
         /* drop the lock and notify the worker threads */
