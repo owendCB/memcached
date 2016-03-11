@@ -239,6 +239,8 @@ void conn_cleanup_engine_allocations(McbpConnection * c) {
 }
 
 static void conn_cleanup(Connection *c) {
+    LOG_WARNING(c,"conn_cleanup conn = %p", (void*)c);
+
     if (c == nullptr) {
         throw std::invalid_argument("conn_cleanup: 'c' must be non-NULL");
     }
@@ -276,6 +278,7 @@ static void conn_cleanup(Connection *c) {
 }
 
 void conn_close(McbpConnection *c) {
+    LOG_WARNING(c,"conn_close conn = %p", (void*)c);
     if (c == nullptr) {
         throw std::invalid_argument("conn_close: 'c' must be non-NULL");
     }

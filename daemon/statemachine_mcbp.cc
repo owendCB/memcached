@@ -424,10 +424,12 @@ bool conn_mwrite(McbpConnection *c) {
 }
 
 bool conn_pending_close(McbpConnection *c) {
+    LOG_WARNING(c, "conn_pending_close conn= %p", (void*)c);
+
     if (!c->isSocketClosed()) {
         throw std::logic_error("conn_pending_close: socketDescriptor must be closed");
     }
-    LOG_DEBUG(c,
+    LOG_WARNING(c,
               "Awaiting clients to release the cookie (pending close for %p)",
               (void*)c);
     /*
@@ -437,6 +439,7 @@ bool conn_pending_close(McbpConnection *c) {
     perform_callbacks(ON_DISCONNECT, NULL, c);
 
     if (c->getRefcount() > 1) {
+         LOG_WARNING(c, "conn_pending_close RefCount > 1 (%d)", c->getRefcount());
         return false;
     }
 
@@ -445,11 +448,12 @@ bool conn_pending_close(McbpConnection *c) {
 }
 
 bool conn_immediate_close(McbpConnection *c) {
+    LOG_WARNING(c, "conn_immediate_close conn= %p", (void*)c);
     struct listening_port *port_instance;
     if (!c->isSocketClosed()) {
         throw std::logic_error("conn_immediate_close: socketDescriptor must be closed");
     }
-    LOG_DETAIL(c, "Releasing connection %p", c);
+    LOG_WARNING(c, "Releasing connection %p", c);
 
     {
         std::lock_guard<std::mutex> guard(stats_mutex);
@@ -463,6 +467,7 @@ bool conn_immediate_close(McbpConnection *c) {
     }
 
     perform_callbacks(ON_DISCONNECT, NULL, c);
+    LOG_WARNING(c, "conn_immediate_close calling disossciate_bucket conn= %p", (void*)c);
     disassociate_bucket(c);
     conn_close(c);
 
@@ -470,6 +475,7 @@ bool conn_immediate_close(McbpConnection *c) {
 }
 
 bool conn_closing(McbpConnection *c) {
+    LOG_WARNING(c, "conn_closing conn= %p", (void*)c);
     /* We don't want any network notifications anymore.. */
     c->unregisterEvent();
     safe_close(c->getSocketDescriptor());
