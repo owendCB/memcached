@@ -409,6 +409,7 @@ bool conn_mwrite(McbpConnection *c) {
 
     case McbpConnection::TransmitResult::HardError:
         LOG_NOTICE(c, "%d - Hard error, closing connection", c->getId());
+        c->setState(conn_closing);
         break;
 
     case McbpConnection::TransmitResult::SoftError:
