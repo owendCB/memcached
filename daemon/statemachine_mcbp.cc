@@ -431,15 +431,16 @@ bool conn_pending_close(McbpConnection *c) {
     if (!c->isSocketClosed()) {
         throw std::logic_error("conn_pending_close: socketDescriptor must be closed");
     }
-    LOG_DEBUG(c,
-              "Awaiting clients to release the cookie (pending close for %p)",
-              (void*)c);
+   
     /*
      * tell the tap connection that we're disconnecting it now,
      * but give it a grace period
      */
     perform_callbacks(ON_DISCONNECT, NULL, c->getCookie());
 
+    LOG_WARNING(c,
+                "conn_pending_close: Awaiting clients to release the cookie (pending close for %p) refcount = %d\n",
+                (void*)c, c->getRefcount());
     if (c->getRefcount() > 1) {
         return false;
     }
@@ -453,7 +454,7 @@ bool conn_immediate_close(McbpConnection *c) {
     if (!c->isSocketClosed()) {
         throw std::logic_error("conn_immediate_close: socketDescriptor must be closed");
     }
-    LOG_DETAIL(c, "Releasing connection %p", c);
+    LOG_WARNING(c, "conn_immediate_close: Releasing connection %p", (void*)c);
 
     {
         std::lock_guard<std::mutex> guard(stats_mutex);
@@ -481,6 +482,12 @@ bool conn_closing(McbpConnection *c) {
 
     /* engine::release any allocated state */
     conn_cleanup_engine_allocations(c);
+    
+    if (c->isEwouldblock()) {
+        LOG_WARNING(c, "conn_pending: conn = %p refcount = %d isEwouldblock == TRUE \n", (void*)c, c->getRefcount());
+    } else {
+        LOG_WARNING(c, "conn_pending: conn = %p refcount = %d isEwouldblock == FALSE \n", (void*)c, c->getRefcount());
+    }
 
     if (c->getRefcount() > 1 || c->isEwouldblock()) {
         c->setState(conn_pending_close);
