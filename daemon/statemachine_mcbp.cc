@@ -455,7 +455,6 @@ bool conn_immediate_close(McbpConnection *c) {
         throw std::logic_error("conn_immediate_close: socketDescriptor must be closed");
     }
     LOG_WARNING(c, "conn_immediate_close: Releasing cookie %p", c->getCookie());
-
     {
         std::lock_guard<std::mutex> guard(stats_mutex);
         port_instance = get_listening_port_instance(c->getParentPort());
@@ -488,7 +487,6 @@ bool conn_closing(McbpConnection *c) {
     } else {
         LOG_WARNING(c, "conn_pending: cookie = %p refcount = %d isEwouldblock == FALSE \n", c->getCookie(), c->getRefcount());
     }
-
     if (c->getRefcount() > 1 || c->isEwouldblock()) {
         c->setState(conn_pending_close);
     } else {
