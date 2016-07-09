@@ -1299,6 +1299,7 @@ void McbpConnection::initateShutdown() {
 }
 
 void McbpConnection::signalIfIdle(bool logbusy, int workerthread) {
+    LOG_WARNING(NULL, "McbpConnection::signalIfIdle \");
     auto state = getState();
     if (state == conn_read ||
         state == conn_nread ||
@@ -1309,6 +1310,7 @@ void McbpConnection::signalIfIdle(bool logbusy, int workerthread) {
          * set write access to ensure it's handled (error logged in
          * updateEvent().
          */
+        LOG_WARNING(NULL, "McbpConnection::signalIfIdle updateEvent\");
         updateEvent(EV_READ | EV_WRITE | EV_PERSIST);
 
         // Raise a 'fake' write event to ensure the connection has an
@@ -1319,7 +1321,7 @@ void McbpConnection::signalIfIdle(bool logbusy, int workerthread) {
         auto* js = toJSON();
         char* details = cJSON_PrintUnformatted(js);
 
-        LOG_NOTICE(NULL, "cookie = %p Worker thread %u: %s", cookie, workerthread, details);
+        LOG_WARNING(NULL, "cookie = %p Worker thread %u: %s", cookie, workerthread, details);
         cJSON_Free(details);
         cJSON_Delete(js);
     }
