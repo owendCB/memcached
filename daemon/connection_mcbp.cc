@@ -1319,7 +1319,7 @@ void McbpConnection::signalIfIdle(bool logbusy, int workerthread) {
         auto* js = toJSON();
         char* details = cJSON_PrintUnformatted(js);
 
-        LOG_NOTICE(NULL, "Worker thread %u: %s", workerthread, details);
+        LOG_NOTICE(NULL, "cookie = %p Worker thread %u: %s", cookie, workerthread, details);
         cJSON_Free(details);
         cJSON_Delete(js);
     }
