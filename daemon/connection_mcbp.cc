@@ -1299,7 +1299,7 @@ void McbpConnection::initateShutdown() {
 }
 
 void McbpConnection::signalIfIdle(bool logbusy, int workerthread) {
-    LOG_WARNING(NULL, "McbpConnection::signalIfIdle this = %p cookie = %p", this, cookie);
+    LOG_WARNING(NULL, "McbpConnection::signalIfIdle this = %p cookie = %p", this, &cookie);
     auto state = getState();
     if (state == conn_read ||
         state == conn_nread ||
