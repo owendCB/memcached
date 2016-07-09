@@ -1299,7 +1299,7 @@ void McbpConnection::initateShutdown() {
 }
 
 void McbpConnection::signalIfIdle(bool logbusy, int workerthread) {
-    LOG_WARNING(NULL, "McbpConnection::signalIfIdle");
+    LOG_WARNING(NULL, "McbpConnection::signalIfIdle this = %p cookie = %p", this, cookie);
     auto state = getState();
     if (state == conn_read ||
         state == conn_nread ||
@@ -1321,7 +1321,7 @@ void McbpConnection::signalIfIdle(bool logbusy, int workerthread) {
         auto* js = toJSON();
         char* details = cJSON_PrintUnformatted(js);
 
-        LOG_WARNING(NULL, "cookie = %p Worker thread %u: %s", cookie, workerthread, details);
+        LOG_WARNING(NULL, "Worker thread %u: %s", workerthread, details);
         cJSON_Free(details);
         cJSON_Delete(js);
     }
