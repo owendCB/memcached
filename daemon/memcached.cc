@@ -1523,7 +1523,8 @@ static ENGINE_ERROR_CODE reserve_cookie(const void *void_cookie) {
     if (cookie->connection == nullptr) {
         throw std::runtime_error("reserve_cookie: cookie must represent connection");
     }
-
+    
+    LOG_WARNING(NULL,"reserve_cookie cookie = %p, connection = %p, current ref count %d being +1",cookie, cookie->connection, cookie->connection->getRefcount());
     cookie->connection->incrementRefcount();
     return ENGINE_SUCCESS;
 }
@@ -1547,6 +1548,7 @@ static ENGINE_ERROR_CODE release_cookie(const void *void_cookie) {
     thr = c->getThread();
     cb_assert(thr);
     LOCK_THREAD(thr);
+    LOG_WARNING(NULL,"reserve_cookie. cookie = %p, connection = %p, current ref count %d being -1",cookie, cookie->connection, cookie->connection->getRefcount());
     c->decrementRefcount();
 
     /* Releasing the refererence to the object may cause it to change
