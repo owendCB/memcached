@@ -1337,6 +1337,7 @@ void McbpConnection::signalIfIdle(bool logbusy, int workerthread) {
                              state == conn_nread ||
                              state == conn_waiting ||
                              state == conn_new_cmd ||
+                             state == conn_mwrite ||
                              state == conn_ship_log)) {
         /*
          * set write access to ensure it's handled (error logged in
